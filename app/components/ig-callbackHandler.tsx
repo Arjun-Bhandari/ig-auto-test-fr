@@ -20,7 +20,8 @@ export function CallbackHandler() {
 
       try {
         const data = await exchangeInstagramCode(code)
-        console.log(data)
+        console.log(data.data)
+        window.localStorage.setItem('igUserId', data.data.igUserId);
         router.push('/')
       } catch (error) {
         console.error('Error exchanging code:', error)

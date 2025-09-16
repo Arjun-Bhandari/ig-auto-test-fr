@@ -15,3 +15,24 @@ export async function exchangeInstagramCode(code: string) {
 
   return response.json();
 }
+
+export async function getIgMedia (igUserId:string, limit:number){
+  const response = await fetch(`${BACKEND_URL}/api/igmedia`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ igUserId, limit }),
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to get Instagram media');
+  }
+
+  const data = await response.json();
+  // Server returns shape: { data: IgMediaItem[], paging?: {...} }
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
+}
