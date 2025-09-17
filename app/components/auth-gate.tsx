@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { IgConnectButton } from '../components/ig-connect';
 import IgMediaGrid from '../components/media/mdia';
+import { AddAutomation } from './automation/add-automation';
 
 interface AuthGateProps {
   limit?: number;
@@ -33,8 +34,8 @@ export const AuthGate = ({ limit = 24 }: AuthGateProps) => {
       </div>
     );
   }
-
-  return igUserId ? <IgMediaGrid limit={limit} /> : <IgConnectButton />;
+{/*  */}
+  return igUserId ?( <><IgMediaGrid limit={limit} /><AddAutomation/> </>): <IgConnectButton />;
 };
 
 export default AuthGate;
