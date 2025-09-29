@@ -1,5 +1,6 @@
 
 import AddautomationButton from "@/custom-component/automation/add-automation-button"
+import { AutomationList } from "@/custom-component/automation/automation-list"
 
 export default function AutomationPage() {
   return (
@@ -11,7 +12,11 @@ export default function AutomationPage() {
           <p className="mt-2 text-white/70">Select a media, configure replies/DMs, and save.</p>
           </div>
           <AddautomationButton />
-          {/* <AddAutomation/> */}
+        
+        </div>
+
+        <div className="mt-6">
+        <AutomationList/>
         </div>
       </div>
     </section>

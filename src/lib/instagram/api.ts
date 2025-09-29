@@ -48,37 +48,6 @@ export async function listAutomationPresets() {
   return r.json(); // { presets: Array<{id,label,description,type}> }
 }
 
-export async function createTemplate(input: {
-  name: string; type: "comment-reply" | "comment-reply+dm"; body: any;
-}) {
-  const r = await fetch(`${BACKEND_URL}/api/templates`, {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(input)
-  });
-  if (!r.ok) throw new Error('Failed to create template');
-  return r.json(); // { success, data:{ id, ... } }
-}
-
-export async function createAutomation(input: {
-  igUserId: string; mediaId: string; templateId: string;
-  randomize?: boolean; responses?: string[]; rule: any;
-}) {
-  const r = await fetch(`${BACKEND_URL}/api/automation-rules`, {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(input)
-  });
-  if (!r.ok) throw new Error('Failed to create automation');
-  return r.json();
-}
-
-export async function listAutomations(igUserId: string) {
-  const r = await fetch(`${BACKEND_URL}/api/automation-rules?igUserId=${encodeURIComponent(igUserId)}`, { cache:'no-store' ,
-  headers:{
-    'ngrok-skip-browser-warning': 'true'
-  }});
-  if (!r.ok) throw new Error('Failed to load automations');
-  return r.json(); // { success, data: AutomationRecord[] }
-}
 
 export async function goLiveSubscribe(igUserId: string, fields: string[] = ["comments", "messages"]) {
   const r = await fetch(`${BACKEND_URL}/api/webhooks/instagram/subscribe`, {
@@ -88,3 +57,117 @@ export async function goLiveSubscribe(igUserId: string, fields: string[] = ["com
   if (!r.ok) throw new Error('Failed to subscribe webhook');
   return r.json();
 }
+
+
+
+// Updated createAutomation function to match new schema
+export async function createAutomation(input: {
+  igUserId: string;
+  mediaId: string;
+  name: string;
+  campaignType:string,
+  rule: any;
+  status?: string;
+  isActive?: boolean;
+}) {
+  const r = await fetch(`${BACKEND_URL}/api/automation`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input)
+  });
+  if (!r.ok) throw new Error('Failed to create automation');
+  return r.json();
+}
+
+// Function to get template by ID
+export async function getTemplateById(templateId: string) {
+  const r = await fetch(`${BACKEND_URL}/api/templates/${templateId}`, {
+    cache: 'no-store',
+    headers: {
+      'ngrok-skip-browser-warning': 'true'
+    }
+  });
+  if (!r.ok) throw new Error('Failed to get template');
+  return r.json();
+}
+
+// Function to process template with user data
+export async function processTemplateWithUserData(templateId: string, userData: any) {
+  const r = await fetch(`${BACKEND_URL}/api/templates/process`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ templateId, userData })
+  });
+  if (!r.ok) throw new Error('Failed to process template');
+  return r.json();
+}
+
+
+export async function getAutomationById(automationId: string) {
+  const r = await fetch(`${BACKEND_URL}/api/automation/${automationId}`, {
+    cache: 'no-store',
+    headers: {
+      'ngrok-skip-browser-warning': 'true'
+    }
+  });
+  if (!r.ok) throw new Error('Failed to get automation');
+  return r.json();
+}
+
+// Function to update automation status
+export async function updateAutomationStatus(automationId: string, status: string, isActive: boolean) {
+  const r = await fetch(`${BACKEND_URL}/api/automation/${automationId}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status, isActive })
+  });
+  if (!r.ok) throw new Error('Failed to update automation status');
+  return r.json();
+}
+
+// Function to delete automation
+export async function deleteAutomation(automationId: string) {
+  const r = await fetch(`${BACKEND_URL}/api/automation/${automationId}`, {
+    method: 'DELETE',
+  });
+  if (!r.ok) throw new Error('Failed to delete automation');
+  return r.json();
+}
+
+// Function to update automation
+export async function updateAutomation(automationId: string, updateData: any) {
+  const r = await fetch(`${BACKEND_URL}/api/automation/${automationId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updateData)
+  });
+  if (!r.ok) throw new Error('Failed to update automation');
+  return r.json();
+}
+
+export async function listAutomations(igUserId: string) {
+  const r = await fetch(`${BACKEND_URL}/api/automation?igUserId=${igUserId}`, {
+    cache: 'no-store',
+    headers: {
+      'ngrok-skip-browser-warning': 'true'
+    }
+  });
+  if (!r.ok) throw new Error('Failed to list automations');
+  return r.json();
+}
+
+
+export async function getIgUser (igUserId: string) {
+  const response = await fetch(`${BACKEND_URL}/api/igauth/user`,{
+    method:"POST",
+    cache:"no-store",
+    headers:{
+      'ngrok-skip-browser-warning': 'true',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ igUserId })
+  })
+  if (!response.ok) throw new Error('Failed to get Instagram user');
+  return response.json();
+}
+ 
