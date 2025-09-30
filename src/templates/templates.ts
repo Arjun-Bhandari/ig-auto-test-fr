@@ -1,5 +1,5 @@
 
-export const TEMPLATES = [
+export const CAMAPAIGN_TYPE = [
 
 
 {

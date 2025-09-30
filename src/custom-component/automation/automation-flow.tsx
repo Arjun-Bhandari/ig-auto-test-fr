@@ -9,7 +9,7 @@ import {
   updateAutomationStatus,
   getIgUser
 } from '../../lib/instagram/api';
-import { TEMPLATES } from "@/templates/templates";
+import { CAMAPAIGN_TYPE } from "@/templates/templates";
 import { useMediaSelection } from '../../stores/media-selection';
 import { useIgUser } from "../../stores/ig-user-store";
 import { useAutomationPreview } from "@/stores/automation-preview";
@@ -63,7 +63,7 @@ export default function AutomationFlow() {
 
  const totalSteps = campaignType === 'comment-reply' ? 2: 3;
   // Find selected template from local templates by slug id
-  const selectedTemplate = TEMPLATES.find(t => t.id === slug);
+  const selectedTemplate = CAMAPAIGN_TYPE.find(t => t.id === slug);
 console.log("SELECTED TEMPLATE",selectedTemplate);
 
 

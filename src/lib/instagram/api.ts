@@ -79,28 +79,8 @@ export async function createAutomation(input: {
   return r.json();
 }
 
-// Function to get template by ID
-export async function getTemplateById(templateId: string) {
-  const r = await fetch(`${BACKEND_URL}/api/templates/${templateId}`, {
-    cache: 'no-store',
-    headers: {
-      'ngrok-skip-browser-warning': 'true'
-    }
-  });
-  if (!r.ok) throw new Error('Failed to get template');
-  return r.json();
-}
 
-// Function to process template with user data
-export async function processTemplateWithUserData(templateId: string, userData: any) {
-  const r = await fetch(`${BACKEND_URL}/api/templates/process`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ templateId, userData })
-  });
-  if (!r.ok) throw new Error('Failed to process template');
-  return r.json();
-}
+
 
 
 export async function getAutomationById(automationId: string) {
