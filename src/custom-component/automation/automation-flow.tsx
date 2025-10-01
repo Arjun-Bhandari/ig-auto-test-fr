@@ -1,39 +1,34 @@
-'use client'
+"use client";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from 'react';
-import { 
-  createAutomation, 
-  listAutomations, 
-  goLiveSubscribe, 
+import { useEffect, useState } from "react";
+import {
+  createAutomation,
+  listAutomations,
+  goLiveSubscribe,
   getIgMedia,
   updateAutomationStatus,
-  getIgUser
-} from '../../lib/instagram/api';
+  getIgUser,
+} from "../../lib/instagram/api";
 import { CAMAPAIGN_TYPE } from "@/templates/templates";
-import { useMediaSelection } from '../../stores/media-selection';
+import { useMediaSelection } from "../../stores/media-selection";
 import { useIgUser } from "../../stores/ig-user-store";
 import { useAutomationPreview } from "@/stores/automation-preview";
 import { IgConnectButton } from "../ig-connect";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft,Zap } from "lucide-react";
+import { ArrowLeft, Zap } from "lucide-react";
 
 import { PhoneMockup } from "./phone-mockup-preview";
-import { ProgressIndicator } from './automation-flowui/ProgressIndicator';
-import { MediaSelectionStep } from './automation-flowui/MediaSelectionStep';
-import { KeywordSelectionStep } from './automation-flowui/KeywordSelectionStep';
-import { CommentReplyStep } from './automation-flowui/CommetReplyStep';
-import { DmStep } from './automation-flowui/DmStep';
-import { StepNavigation } from './automation-flowui/StepNavigatioin';
-import { MediaSelectionDialog } from './automation-flowui/MediaSelectionDialog';
-
-
-
+import { ProgressIndicator } from "./automation-flowui/ProgressIndicator";
+import { MediaSelectionStep } from "./automation-flowui/MediaSelectionStep";
+import { KeywordSelectionStep } from "./automation-flowui/KeywordSelectionStep";
+import { DmStep } from "./automation-flowui/DmStep";
+import { StepNavigation } from "./automation-flowui/StepNavigatioin";
+import { MediaSelectionDialog } from "./automation-flowui/MediaSelectionDialog";
+import { CommentReplyStep } from "./automation-flowui/CommetReplyStep";
 export default function AutomationFlow() {
   const { slug } = useParams();
-  const { selectedMediaId} = useMediaSelection();
-  const setMedia = useMediaSelection(state=> state.setMedia);
+  const { selectedMediaId } = useMediaSelection();
+  const setMedia = useMediaSelection((state) => state.setMedia);
   const preview = useAutomationPreview();
   const [igUserId, setIgUserId] = useState<string | null>(null);
   const [automationRule, setAutomationRule] = useState<any[]>([]);
@@ -45,70 +40,58 @@ export default function AutomationFlow() {
   const [isGoLiveLoading, setIsGoLiveLoading] = useState(false);
   const [automationId, setAutomationId] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(false);
-  const [form, setForm] = useState({
-    mediaId: '', 
-    includeKeywords: [] as string[], 
-    regex: '', 
-    replyText: '',
-    dmText: '', 
-    buttonLabel: '', 
-    buttonUrl: '', 
-    randomize: false, 
-    responses: [] as string[],
-  });
 
-  const campaignType = slug === 'comment-reply' || slug === 'comment-reply-dm'
-    ? (slug as 'comment-reply' | 'comment-reply-dm')
-    : 'comment-reply';
+  const campaignType =
+    slug === "comment-reply" || slug === "comment-reply-dm"
+      ? (slug as "comment-reply" | "comment-reply-dm")
+      : "comment-reply";
 
- const totalSteps = campaignType === 'comment-reply' ? 2: 3;
+  const totalSteps = campaignType === "comment-reply" ? 2 : 3;
   // Find selected template from local templates by slug id
-  const selectedTemplate = CAMAPAIGN_TYPE.find(t => t.id === slug);
-console.log("SELECTED TEMPLATE",selectedTemplate);
-
+  const selectedTemplate = CAMAPAIGN_TYPE.find((t) => t.id === slug);
+  console.log("SELECTED TEMPLATE", selectedTemplate);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') setIgUserId(localStorage.getItem('igUserId'));
+    if (typeof window !== "undefined")
+      setIgUserId(localStorage.getItem("igUserId"));
   }, []);
 
   // Initialize template from local TEMPLATES once
   useEffect(() => {
     setIsLoadingTemplate(true);
-   
+
     setTemplate(selectedTemplate || null);
     setIsLoadingTemplate(false);
   }, [selectedTemplate]);
 
-
   useEffect(() => {
     const fetchData = async () => {
       if (!igUserId) return;
-      
+
       try {
         // Fetch media
         const mediaData = await getIgMedia(igUserId, 24);
         setMedia(mediaData);
-        
+
         // Fetch user
         const userResponse = await getIgUser(igUserId);
         useIgUser.getState().setUser(userResponse.data);
       } catch (error) {
-        console.error('Failed to fetch data:', error);
+        console.error("Failed to fetch data:", error);
       }
     };
-  
+
     fetchData();
   }, [igUserId]);
 
-  useEffect(() => {
-    if (selectedMediaId) setForm(f => ({ ...f, mediaId: selectedMediaId }));
-    else setForm(f => ({ ...f, mediaId: '' }));
-  }, [selectedMediaId]);
-
-  const canSubmit = Boolean(igUserId && selectedMediaId && (preview.replyText || preview.responses.length > 0));
+  const canSubmit = Boolean(
+    igUserId &&
+      selectedMediaId &&
+      (preview.replyText || preview.responses.length > 0)
+  );
 
   const handleNext = () => {
-    if (currentStep  < totalSteps) {
+    if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -118,7 +101,7 @@ console.log("SELECTED TEMPLATE",selectedTemplate);
       setCurrentStep(currentStep - 1);
     }
   };
-console.log( "INCLUDE KEYWORD",preview.includeKeywords)
+  console.log("INCLUDE KEYWORD", preview.includeKeywords);
   const canProceedToNext = () => {
     switch (currentStep) {
       case 1:
@@ -128,7 +111,9 @@ console.log( "INCLUDE KEYWORD",preview.includeKeywords)
       case 3:
         return Boolean(preview.replyText || preview.responses.length > 0);
       case 4:
-        return campaignType === 'comment-reply-dm' ? Boolean(preview.dmText || preview.buttonUrl || preview.buttonLabel) : true;
+        return campaignType === "comment-reply-dm"
+          ? Boolean(preview.dmText || preview.buttonUrl || preview.buttonLabel)
+          : true;
       default:
         return false;
     }
@@ -140,43 +125,63 @@ console.log( "INCLUDE KEYWORD",preview.includeKeywords)
     try {
       setIsSaving(true);
 
-      // Build processed template locally from selected template and form
       const processedTemplate = template;
-      if (!processedTemplate) throw new Error('Template not available');
+      if (!processedTemplate) throw new Error("Template not available");
 
-      // Build actions with non-empty text
       let replyText = preview.replyText;
-      if (!replyText && form.responses.length > 0) {
+      if (!replyText && preview.responses.length > 0) {
         replyText = preview.responses[0];
       }
       if (!replyText) {
-        replyText = 'Automated reply';
+        replyText = "Automated reply";
       }
 
       const actions = [] as any[];
       if (preview.randomize && preview.responses.length > 0) {
-        actions.push({ type: 'comment_reply', text: replyText, responses: form.responses, randomize: true });
+        actions.push({
+          type: "comment_reply",
+          text: replyText,
+          responses: preview.responses,
+          randomize: true,
+        });
       } else {
-        actions.push({ type: 'comment_reply', text: replyText });
+        actions.push({ type: "comment_reply", text: replyText });
       }
-      if (campaignType === 'comment-reply-dm') {
-        actions.push({ type: 'send_dm', text: preview.dmText || 'Thank you!', buttons: preview.buttonUrl ? [{ type: 'url', label: preview.buttonLabel || 'Open', url: preview.buttonUrl }] : [] });
+      if (campaignType === "comment-reply-dm") {
+        actions.push({
+          type: "send_dm",
+          text: preview.dmText || "Thank you!",
+          buttons: preview.buttonUrl
+            ? [
+                {
+                  type: "url",
+                  label: preview.buttonLabel || "Open",
+                  url: preview.buttonUrl,
+                },
+              ]
+            : [],
+        });
       }
 
       const match: any = {};
-      if (preview.includeKeywords.length > 0) match.include = preview.includeKeywords;
-      if (form.regex) match.regex = form.regex;
+      if (preview.includeKeywords.length > 0)
+        match.include = preview.includeKeywords;
+      if (preview.regex) match.regex = preview.regex;
 
       const rule = {
-        trigger: { type: 'comment_created', mediaId: form.mediaId, match: Object.keys(match).length ? match : undefined },
+        trigger: {
+          type: "comment_created",
+          mediaId: selectedMediaId,
+          match: Object.keys(match).length ? match : undefined,
+        },
         actions,
       };
 
       const automationResponse = await createAutomation({
         igUserId,
-        campaignType:campaignType,
+        campaignType: campaignType,
         mediaId: selectedMediaId,
-        name: selectedTemplate?.title || 'Automation',
+        name: selectedTemplate?.title || "Automation",
         randomize: preview.randomize,
         responses: preview.responses,
         rule,
@@ -186,29 +191,30 @@ console.log( "INCLUDE KEYWORD",preview.includeKeywords)
         setAutomationId((automationResponse as any).data.id);
         // const automationsRule = await listAutomations(igUserId);
         // setAutomationRule(automationsRule.data);
-        alert('Automation created successfully!');
+        alert("Automation created successfully!");
       }
     } catch (error) {
-      console.error('Error creating automation:', error);
-      alert('Failed to create automation');
+      console.error("Error creating automation:", error);
+      alert("Failed to create automation");
     } finally {
-      preview.reset();
-      useMediaSelection.getState().clear();
       setIsSaving(false);
-      setCurrentStep(1);
     }
   };
 
   const handleToggleActive = async () => {
     setIsGoLiveLoading(true);
     if (!automationId) return;
-    
+
     try {
       const newIsActive = !isActive;
-      const newStatus = newIsActive ? 'ACTIVE' : 'PAUSED';
-      
-      const response = await updateAutomationStatus(automationId, newStatus, newIsActive);
-      
+      const newStatus = newIsActive ? "ACTIVE" : "PAUSED";
+
+      const response = await updateAutomationStatus(
+        automationId,
+        newStatus,
+        newIsActive
+      );
+
       if (response.success) {
         setIsActive(newIsActive);
         // Update local automation list
@@ -216,63 +222,62 @@ console.log( "INCLUDE KEYWORD",preview.includeKeywords)
         setAutomationRule(automationsRule.data);
       }
     } catch (error) {
-      console.error('Error updating automation status:', error);
-      alert('Failed to update automation status');
+      console.error("Error updating automation status:", error);
+      alert("Failed to update automation status");
     } finally {
       setIsGoLiveLoading(false);
     }
   };
+  useEffect(() =>{
+    return ()=>{
+      preview.reset();
+      const media = useMediaSelection.getState();
+      media.clear();
+    };
+  }, []);
 
-  // const handleGoLive = async () => {
-  //   if (!igUserId) return;
-    
-  //   try {
-  //     setIsGoLiveLoading(true);
-  //     await goLiveSubscribe(igUserId);
-  //     alert('Webhook subscribed successfully!');
-  //   } catch (error) {
-  //     console.error('Error subscribing webhook:', error);
-  //     alert('Failed to subscribe webhook');
-  //   } finally {
-  //     setIsGoLiveLoading(false);
-  //   }
-  // };
-
-  
-console.log("TEMPLATES",template);
-  // Show connect button if no igUserId
   if (!igUserId) {
     return (
       <div className="flex h-screen bg-[#12111A] items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-white mb-4">Connect to Instagram</h2>
-          <p className="text-white/60 mb-6">You need to connect your Instagram account to create automations.</p>
+          <h2 className="text-xl font-semibold text-white mb-4">
+            Connect to Instagram
+          </h2>
+          <p className="text-white/60 mb-6">
+            You need to connect your Instagram account to create automations.
+          </p>
           <IgConnectButton />
         </div>
       </div>
     );
   }
 
-  // Show loading state while template is loading
   if (isLoadingTemplate) {
     return (
       <div className="flex h-screen bg-[#12111A] items-center justify-center">
         <div className="text-center">
-          <div className="text-xl font-semibold text-white mb-4">Loading Template...</div>
-          <div className="text-white/60">Please wait while we load your template.</div>
+          <div className="text-xl font-semibold text-white mb-4">
+            Loading Template...
+          </div>
+          <div className="text-white/60">
+            Please wait while we load your template.
+          </div>
         </div>
       </div>
     );
   }
 
-  // Show error if template not found
   if (selectedTemplate && !template) {
     return (
       <div className="flex h-screen bg-[#12111A] items-center justify-center">
         <div className="text-center">
-          <div className="text-xl font-semibold text-white mb-4">Template Not Found</div>
-          <div className="text-white/60 mb-6">The selected template could not be loaded.</div>
-          <button 
+          <div className="text-xl font-semibold text-white mb-4">
+            Template Not Found
+          </div>
+          <div className="text-white/60 mb-6">
+            The selected template could not be loaded.
+          </div>
+          <button
             onClick={() => window.history.back()}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
@@ -285,29 +290,32 @@ console.log("TEMPLATES",template);
 
   return (
     <div className="flex h-screen bg-[#12111A]">
- 
-      {/* Left Panel - Configuration (20% width) */}
       <div className="w-80 border-r border-white/10 overflow-y-auto">
         {/* Header */}
         <div className="p-4 border-b border-white/10">
           <div className="flex items-center gap-2 mb-4">
             <ArrowLeft className="w-4 h-4 text-white" />
             <h1 className="text-lg font-semibold text-white">
-              {campaignType === 'comment-reply' ? 'When Comment Received on' : 'When Comment Received on'}
+              {campaignType === "comment-reply"
+                ? "When Comment Received on"
+                : "When Comment Received on"}
             </h1>
           </div>
-          
-          
-          
-          <ProgressIndicator currentStep={currentStep} totalSteps={totalSteps} />
+         
+          <ProgressIndicator
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+          />
         </div>
 
         <div className="p-4">
-          {currentStep === 1 && <MediaSelectionStep onShowModal={() => setShowMediaModal(true)} />}
+          {currentStep === 1 && (
+            <MediaSelectionStep onShowModal={() => setShowMediaModal(true)} />
+          )}
           {currentStep === 2 && <KeywordSelectionStep />}
 
           {currentStep === 3 && <DmStep />}
-          
+
           {/* Navigation Buttons */}
           <StepNavigation
             currentStep={currentStep}
@@ -320,69 +328,40 @@ console.log("TEMPLATES",template);
             onNext={handleNext}
             onSave={handleSave}
           />
-
-          {/* Existing Automations */}
-          {/* {automationRule.length > 0 && (
-            <div className="pt-4 border-t border-white/10 mt-6">
-              <h3 className="text-sm font-medium text-white mb-2">Existing Automations</h3>
-              <ul className="space-y-1">
-                {automationRule.map((rule) => (
-                  <li key={rule.id} className="text-xs text-white/70 bg-white/5 p-2 rounded">
-                    {rule.name}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )} */}
         </div>
       </div>
-   
-      {/* Right Panel - Workflow Canvas (80% width) */}
+
       <div className="flex-1 relative">
-
         <div className="h-full mt-24">
-          {/* <WorkflowCanvas workflow={template} /> */}
-          <PhoneMockup campaignType={campaignType} currentStep={currentStep}/>
+          <PhoneMockup campaignType={campaignType} currentStep={currentStep} />
         </div>
       </div>
-      {/* <Button
-              onClick={handleGoLive}
-              disabled={isGoLiveLoading}
+
+      <div className="">
+        <div className="flex items-center gap-2">
+       
+          {automationId && (
+            <Button
+              variant="outline"
+              onClick={handleToggleActive}
               className="bg-violet-600 hover:bg-violet-700 text-white text-xs px-3 py-1"
             >
               {isGoLiveLoading ? (
                 <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin mr-1"></div>
+              ) : isActive ? (
+                "Stop"
               ) : (
-              "Set Live"
+                "Go Live"
               )}
-         
-            </Button> */}
-            {/* Status and Controls */}
-          <div className="">
-            <div className="flex items-center gap-2">
-              {/* <Badge 
-                className={`text-xs ${isActive ? 'bg-green-500' : 'bg-gray-500'} text-white`}
-              >
-                {isActive ? 'Active' : 'Inactive'}
-              </Badge> */}
-              {automationId && (
-                <Button variant="outline" onClick={handleToggleActive} className="bg-violet-600 hover:bg-violet-700 text-white text-xs px-3 py-1">
-                  {isGoLiveLoading ? (
-                    <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin mr-1"></div>
-                  ) : (
-                  isActive ? 'Stop' : 'Go Live'
-                  )}
-                </Button>
-              )}
-            </div>
-            
-           
-          </div>
-     
-      <MediaSelectionDialog 
-        open={showMediaModal} 
-        onOpenChange={setShowMediaModal} 
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <MediaSelectionDialog
+        open={showMediaModal}
+        onOpenChange={setShowMediaModal}
       />
     </div>
-  )
+  );
 }

@@ -79,7 +79,7 @@ export function EditAutomation() {
   const [automation, setAutomation] = useState<AutomationDTO | null>(null);
   const [isGoLiveLoading, setIsGoLiveLoading] = useState<boolean>(false);
   const [status, setStatus] = useState<"ACTIVE" | "PAUSED" | string>("PAUSED");
-  // campaign type from query or infer from automation
+
   const campaignType = useMemo<"comment-reply" | "comment-reply-dm">(() => {
     const q = query.campaign_type as
       | "comment-reply"
@@ -92,14 +92,13 @@ export function EditAutomation() {
 
   const totalSteps = campaignType === "comment-reply" ? 2 : 3;
 
-  // boot: load igUserId from storage
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       setIgUserId(localStorage.getItem("igUserId"));
     }
   }, []);
 
-  // fetch automation + user + media, then hydrate stores
   useEffect(() => {
     const run = async () => {
       if (!igUserId || !id) return;
@@ -110,13 +109,13 @@ export function EditAutomation() {
         const userRes = await getIgUser(igUserId);
         userStore.setUser(userRes.data);
 
-        // automation
-        const aRes = await getAutomationById(id);
-        const a: AutomationDTO = aRes.data ?? aRes; // backend may wrap in {data}
+//automation
+        const automationRes = await getAutomationById(id);
+        const a: AutomationDTO = automationRes.data ?? automationRes; 
         setAutomation(a);
         setStatus((a.status as any) || (a.isActive ? "ACTIVE" : "PAUSED"));
-        // media
-        const mediaList = await getIgMedia(igUserId, 24);
+//media
+        const mediaList = await getIgMedia(igUserId, 100);
         mediaStore.setMedia(mediaList);
         if (a.mediaId) mediaStore.select(a.mediaId);
 
@@ -145,7 +144,7 @@ export function EditAutomation() {
       }
     };
     run();
-  }, [igUserId, id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [igUserId, id]);
 
   const canProceedToNext = useMemo(() => {
     switch (currentStep) {
@@ -196,7 +195,7 @@ export function EditAutomation() {
     try {
       setSaving(true);
 
-      // build actions from preview
+      
       let replyText =
         preview.replyText || preview.responses[0] || "Automated reply";
       const actions: any[] = [];
@@ -255,7 +254,8 @@ export function EditAutomation() {
       alert("Failed to update automation");
     } finally {
       preview.reset();
-      useMediaSelection.getState().clear();
+      const media = useMediaSelection.getState()
+      media.clear();
       setSaving(false);
     }
   };

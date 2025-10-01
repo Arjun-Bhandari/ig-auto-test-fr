@@ -29,4 +29,5 @@ export const useMediaSelection = create<MediaSelectionState>((set, get) => ({
     return media.find(item => item.id === selectedMediaId) || null;
   },
   clear: () => set({ selectedMediaId: null }),
+  reset:()=>set({selectedMediaId:null,media:[]})
 }));

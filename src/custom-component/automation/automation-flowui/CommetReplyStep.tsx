@@ -1,74 +1,56 @@
 'use client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, X } from 'lucide-react';
+import { useMemo } from 'react';
+import { useParams } from 'next/navigation';
 import { useAutomationPreview } from '@/stores/automation-preview';
+import { CAMAPAIGN_TYPE } from '@/templates/templates';
+import { cn } from '@/lib/utils'; // if you have a cn helper, else inline classes
 
 export const CommentReplyStep = () => {
+  const { slug } = useParams<{ slug: string }>();
   const preview = useAutomationPreview();
 
-  const handleAddResponse = () => {
-    if (preview.replyText.trim()) {
-      preview.setResponses([...preview.responses, preview.replyText.trim()]);
-      preview.setReplyText('');
-    }
-  };
+  const defaults = useMemo(() => {
+    const t = CAMAPAIGN_TYPE.find(x => x.id === slug);
+    return t?.variables?.defaultReplyText ?? [];
+  }, [slug]);
 
-  const handleRemoveResponse = (index: number) => {
-    preview.setResponses(preview.responses.filter((_, i) => i !== index));
+  const handlePick = (val: string) => {
+    preview.setReplyText(val);
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-white mb-2">Public Replies</h2>
-        <p className="text-white/60 mb-4">Configure your automated replies.</p>
-        
-        <div className="space-y-4">
-          {preview.responses.map((response, index) => (
-            <div key={index} className="flex items-center gap-2 p-2 border border-white/10 rounded-lg bg-white/5">
-              <span className="flex-1 text-sm text-white">{response}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleRemoveResponse(index)}
-                className="h-6 w-6 p-0 text-white/60 hover:text-red-400"
-              >
-                <X className="w-3 h-3" />
-              </Button>
-            </div>
-          ))}
-          <div className="flex gap-2">
-            <Input
-              placeholder="Add reply text..."
-              value={preview.replyText}
-              onChange={(e) => preview.setReplyText(e.target.value)}
-              className="text-sm bg-white/10 border-white/20 text-white placeholder:text-white/50"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleAddResponse}
-              className="px-3 border-white/20 text-white hover:bg-white/10"
-            >
-              <Plus className="w-3 h-3" />
-            </Button>
-          </div>
-        </div>
+    <div className="space-y-3">
 
-        {/* Randomize Option */}
-        <div className="flex items-center space-x-2 mt-4">
-          <Checkbox
-            id="randomize"
-            checked={preview.randomize}
-            onCheckedChange={(checked) => preview.setRandomize(checked as boolean)}
-          />
-          <label htmlFor="randomize" className="text-sm text-white">
-            Randomize from response pool
-          </label>
-        </div>
+      <div className="pt-2">
+        <label className="block text-xs text-white/60 mb-1">Your reply</label>
+        <textarea
+          value={preview.replyText}
+          onChange={(e) => preview.setReplyText(e.target.value)}
+          className="w-full bg-white/10 border border-white/10 rounded-md px-3 py-2 text-sm min-h-[88px] focus:outline-none focus:ring-1 focus:ring-white/30"
+          placeholder="Type your reply…"
+        />
       </div>
+      <div className="text-xs text-white/60">Quick replies</div>
+      <div className="grid gap-2">
+        {defaults.map((val) => {
+          const isSelected = preview.replyText.trim() === val.trim();
+          return (
+            <button
+              key={val}
+              type="button"
+              onClick={() => handlePick(val)}
+              className={cn(
+                'w-full text-left bg-white/10 hover:bg-white/15 border rounded-md px-3 py-2 text-sm transition-colors',
+                isSelected ? 'border-white/40 bg-white/15' : 'border-white/10'
+              )}
+            >
+              {val}
+            </button>
+          );
+        })}
+      </div>
+
+      
     </div>
   );
 };

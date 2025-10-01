@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { IPhoneMockup , AndroidMockup} from "react-device-mockup";
+import { AndroidMockup} from "react-device-mockup";
 import { Tabs, TabsTrigger, TabsList } from "@/components/ui/tabs";
 import { PostSheet } from "./instagramui/PostSheet";
 import { CommentSheet } from "./instagramui/CommentSheet";
@@ -19,11 +19,11 @@ export function PhoneMockup({campaignType='comment-reply',currentStep=1}:PhoneMo
       setActiveTab('posts');
       setCommentsOpen(false);
       setDmsOpen(false);
-    } else if (currentStep === 2 || currentStep === 3) {
+    } else if (currentStep === 2 ) {
       setActiveTab('comments');
       setCommentsOpen(true);
       setDmsOpen(false);
-    } else if (currentStep === 4 && campaignType === 'comment-reply-dm') {
+    } else if (currentStep === 3 && campaignType === 'comment-reply-dm') {
       setActiveTab('dms');
       setCommentsOpen(false);
       setDmsOpen(true);

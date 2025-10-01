@@ -34,7 +34,7 @@ export function CommentSheet({commentsOpen}:{commentsOpen:boolean}){
                 <div>
                   <div className="font-medium">username</div>
                   <div className="text-white/80">
-                    {preview.includeKeywords[0]} {preview.includeKeywords.length > 1 && `+${preview.includeKeywords.length - 1} more`}
+                    {preview.includeKeywords[0] || "User Comment"} {preview.includeKeywords.length > 1 && `+${preview.includeKeywords.length - 1} more`}
                   </div>
                 </div>
               </div>
