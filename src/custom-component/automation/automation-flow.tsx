@@ -1,10 +1,9 @@
 "use client";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   createAutomation,
   listAutomations,
-  goLiveSubscribe,
   getIgMedia,
   updateAutomationStatus,
   getIgUser,
@@ -40,7 +39,7 @@ export default function AutomationFlow() {
   const [isGoLiveLoading, setIsGoLiveLoading] = useState(false);
   const [automationId, setAutomationId] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(false);
-
+  const router = useRouter();
   const campaignType =
     slug === "comment-reply" || slug === "comment-reply-dm"
       ? (slug as "comment-reply" | "comment-reply-dm")
@@ -185,6 +184,8 @@ export default function AutomationFlow() {
         randomize: preview.randomize,
         responses: preview.responses,
         rule,
+        isActive:true,
+        status:"ACTIVE"
       } as any);
 
       if ((automationResponse as any).success) {
@@ -193,10 +194,15 @@ export default function AutomationFlow() {
         // setAutomationRule(automationsRule.data);
         alert("Automation created successfully!");
       }
+      preview.reset();
+      router.push(`/automation`);
     } catch (error) {
       console.error("Error creating automation:", error);
       alert("Failed to create automation");
     } finally {
+      preview.reset();
+      const media = useMediaSelection.getState();
+      media.clear();
       setIsSaving(false);
     }
   };

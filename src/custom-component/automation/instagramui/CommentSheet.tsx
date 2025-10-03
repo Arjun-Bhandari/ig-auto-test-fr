@@ -50,7 +50,7 @@ export function CommentSheet({commentsOpen}:{commentsOpen:boolean}){
                 </div>
                 <div>
                   <div className="font-medium">
-                    {user?.name || "Your account"}
+                    {user?.name || user?.username || "Your account"}
                   </div>
                   <div className="bg-white/10 rounded-2xl px-3 mt-2 py-2">
                   <div className="text-white/90">

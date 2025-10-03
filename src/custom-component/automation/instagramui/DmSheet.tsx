@@ -33,7 +33,7 @@ export function DmSheet({ setDmsOpen }: { setDmsOpen: any }) {
                 className="rounded-full object-cover"
               />
             </div>
-            <span>{user?.name}</span>
+            <span>{user?.name || user?.username}</span>
           </div>
         </div>
         <div className="flex items-center gap-2">

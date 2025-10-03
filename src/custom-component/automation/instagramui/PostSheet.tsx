@@ -25,7 +25,7 @@ export function PostSheet(){
                 className="rounded-full object-cover"
               />
             </div>
-            <span>{user?.name}</span>
+            <span>{user?.name || user?.username}</span>
           </div>
           <h1 className="text-bold">...</h1>
         </div>
