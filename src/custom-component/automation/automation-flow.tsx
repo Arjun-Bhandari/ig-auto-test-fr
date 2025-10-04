@@ -7,7 +7,7 @@ import {
   getIgMedia,
   updateAutomationStatus,
   getIgUser,
-} from "../../lib/instagram/api";
+} from "../../lib/instagram/services";
 import { CAMAPAIGN_TYPE } from "@/templates/templates";
 import { useMediaSelection } from "../../stores/media-selection";
 import { useIgUser } from "../../stores/ig-user-store";
@@ -29,7 +29,6 @@ export default function AutomationFlow() {
   const { selectedMediaId } = useMediaSelection();
   const setMedia = useMediaSelection((state) => state.setMedia);
   const preview = useAutomationPreview();
-  const [igUserId, setIgUserId] = useState<string | null>(null);
   const [automationRule, setAutomationRule] = useState<any[]>([]);
   const [showMediaModal, setShowMediaModal] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -39,6 +38,8 @@ export default function AutomationFlow() {
   const [isGoLiveLoading, setIsGoLiveLoading] = useState(false);
   const [automationId, setAutomationId] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(false);
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
+const [accessToken, setAccessToken] = useState<string | null>(null)
   const router = useRouter();
   const campaignType =
     slug === "comment-reply" || slug === "comment-reply-dm"
@@ -52,7 +53,8 @@ export default function AutomationFlow() {
 
   useEffect(() => {
     if (typeof window !== "undefined")
-      setIgUserId(localStorage.getItem("igUserId"));
+     setRefreshToken(localStorage.getItem("refreshToken"))
+    setAccessToken(localStorage.getItem("accessToken"))
   }, []);
 
   // Initialize template from local TEMPLATES once
@@ -65,28 +67,29 @@ export default function AutomationFlow() {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!igUserId) return;
+      if (!refreshToken && !accessToken) return;
 
       try {
         // Fetch media
-        const mediaData = await getIgMedia(igUserId, 24);
+        const mediaData = await getIgMedia(24);
         setMedia(mediaData);
 
         // Fetch user
-        const userResponse = await getIgUser(igUserId);
-        useIgUser.getState().setUser(userResponse.data);
+        const userResponse = await getIgUser();
+        console.log("User Response", userResponse)
+        useIgUser.getState().setUser(userResponse);
       } catch (error) {
         console.error("Failed to fetch data:", error);
       }
     };
 
     fetchData();
-  }, [igUserId]);
+  }, [refreshToken, accessToken]);
 
   const canSubmit = Boolean(
-    igUserId &&
+    refreshToken || accessToken &&
       selectedMediaId &&
-      (preview.replyText || preview.responses.length > 0)
+      preview.replyText
   );
 
   const handleNext = () => {
@@ -106,10 +109,9 @@ export default function AutomationFlow() {
       case 1:
         return Boolean(selectedMediaId);
       case 2:
-        return Boolean(preview.includeKeywords.length > 0);
+        return Boolean(preview.includeKeywords.length > 0 && preview.replyText);
+  
       case 3:
-        return Boolean(preview.replyText || preview.responses.length > 0);
-      case 4:
         return campaignType === "comment-reply-dm"
           ? Boolean(preview.dmText || preview.buttonUrl || preview.buttonLabel)
           : true;
@@ -119,7 +121,7 @@ export default function AutomationFlow() {
   };
 
   const handleSave = async () => {
-    if (!igUserId || !selectedMediaId) return;
+    if (!accessToken && !refreshToken || !selectedMediaId) return;
 
     try {
       setIsSaving(true);
@@ -128,20 +130,16 @@ export default function AutomationFlow() {
       if (!processedTemplate) throw new Error("Template not available");
 
       let replyText = preview.replyText;
-      if (!replyText && preview.responses.length > 0) {
-        replyText = preview.responses[0];
-      }
+     
       if (!replyText) {
         replyText = "Automated reply";
       }
 
       const actions = [] as any[];
-      if (preview.randomize && preview.responses.length > 0) {
+      if (preview.replyText) {
         actions.push({
           type: "comment_reply",
           text: replyText,
-          responses: preview.responses,
-          randomize: true,
         });
       } else {
         actions.push({ type: "comment_reply", text: replyText });
@@ -177,24 +175,23 @@ export default function AutomationFlow() {
       };
 
       const automationResponse = await createAutomation({
-        igUserId,
+        
         campaignType: campaignType,
         mediaId: selectedMediaId,
         name: selectedTemplate?.title || "Automation",
-        randomize: preview.randomize,
-        responses: preview.responses,
         rule,
-        isActive:true,
-        status:"ACTIVE"
+        isActive: true,
+        status: "ACTIVE",
       } as any);
-
+console.log("Automation Response", automationResponse)
       if ((automationResponse as any).success) {
         setAutomationId((automationResponse as any).data.id);
         // const automationsRule = await listAutomations(igUserId);
         // setAutomationRule(automationsRule.data);
         alert("Automation created successfully!");
       }
-      preview.reset();
+      
+
       router.push(`/automation`);
     } catch (error) {
       console.error("Error creating automation:", error);
@@ -215,16 +212,15 @@ export default function AutomationFlow() {
       const newIsActive = !isActive;
       const newStatus = newIsActive ? "ACTIVE" : "PAUSED";
 
-      const response = await updateAutomationStatus(
-        automationId,
-        newStatus,
-        newIsActive
-      );
+      const response = await updateAutomationStatus( {
+        status:newStatus,
+        isActive:newIsActive
+      },automationId);
 
-      if (response.success) {
+      if (response) {
         setIsActive(newIsActive);
         // Update local automation list
-        const automationsRule = await listAutomations(igUserId!);
+        const automationsRule = await listAutomations();
         setAutomationRule(automationsRule.data);
       }
     } catch (error) {
@@ -234,15 +230,15 @@ export default function AutomationFlow() {
       setIsGoLiveLoading(false);
     }
   };
-  useEffect(() =>{
-    return ()=>{
+  useEffect(() => {
+    return () => {
       preview.reset();
       const media = useMediaSelection.getState();
       media.clear();
     };
   }, []);
 
-  if (!igUserId) {
+  if (!refreshToken && !accessToken) {
     return (
       <div className="flex h-screen bg-[#12111A] items-center justify-center">
         <div className="text-center">
@@ -307,7 +303,7 @@ export default function AutomationFlow() {
                 : "When Comment Received on"}
             </h1>
           </div>
-         
+
           <ProgressIndicator
             currentStep={currentStep}
             totalSteps={totalSteps}
@@ -345,7 +341,6 @@ export default function AutomationFlow() {
 
       <div className="">
         <div className="flex items-center gap-2">
-       
           {automationId && (
             <Button
               variant="outline"

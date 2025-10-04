@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { listAutomations, updateAutomationStatus, deleteAutomation } from '@/lib/instagram/api';
+import { listAutomations, updateAutomationStatus, deleteAutomation } from '@/lib/instagram/services';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -47,30 +47,33 @@ export function AutomationList() {
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
   const router = useRouter();
-const [igUserId, setIgUserId] = useState<string | null>(null);
+const [refreshToken, setRefreshToken] = useState<string | null>(null);
+const [accessToken, setAccessToken] = useState<string | null>(null)
 useEffect(() => {
   if (typeof window !== 'undefined') {
-    const userId = localStorage.getItem('igUserId');
-    setIgUserId(userId);
+    const refreshToken = localStorage.getItem('refreshToken');
+    const accessToken  = localStorage.getItem('accessToken')
+    setRefreshToken(refreshToken);
+    setAccessToken(accessToken)
   }
 }, []);
 
 useEffect(() => {
-  if (igUserId) {
+  if (refreshToken && accessToken) {
     loadAutomations();
   } else {
     // If no igUserId, stop loading
     setIsLoading(false);
   }
-}, [igUserId]);
+}, [refreshToken, accessToken]);
 
   const loadAutomations = async () => {
     try {
       setIsLoading(true);
   
-      const response = await listAutomations(igUserId as string);
-      if (response.success) {
-        setAutomations(response.data);
+      const response = await listAutomations();
+      if (response) {
+        setAutomations(response.data.data);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load automations');
@@ -86,9 +89,9 @@ useEffect(() => {
       const newStatus = currentIsActive ? 'PAUSED' : 'ACTIVE';
       const newIsActive = !currentIsActive;
       
-      const response = await updateAutomationStatus(automationId, newStatus, newIsActive);
+      const response = await updateAutomationStatus( {status:newStatus, isActive:newIsActive},automationId,);
       
-      if (response.success) {
+      if (response) {
         setAutomations(prev => 
           prev.map(automation => 
             automation.id === automationId 
@@ -111,7 +114,7 @@ useEffect(() => {
       setUpdating(automationId);
       const response = await deleteAutomation(automationId);
       
-      if (response.success) {
+      if (response) {
         setAutomations(prev => prev.filter(automation => automation.id !== automationId));
       }
     } catch (err) {
@@ -150,7 +153,7 @@ useEffect(() => {
     });
   };
   // Show connect button if no igUserId
-  if (!igUserId) {
+  if (!refreshToken && !accessToken) {
     return (
       <div className="flex h-screen bg-[#12111A] items-center justify-center">
         <div className="text-center">

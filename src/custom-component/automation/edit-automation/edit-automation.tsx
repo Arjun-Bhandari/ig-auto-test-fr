@@ -21,7 +21,7 @@ import {
   getIgUser,
   updateAutomation,
   updateAutomationStatus,
-} from "@/lib/instagram/api";
+} from "@/lib/instagram/services";
 
 interface AutomationDTO {
   id: string;
@@ -106,7 +106,7 @@ export function EditAutomation() {
         setLoading(true);
 
         // user
-        const userRes = await getIgUser(igUserId);
+        const userRes = await getIgUser();
         userStore.setUser(userRes.data);
 
 //automation
@@ -115,7 +115,7 @@ export function EditAutomation() {
         setAutomation(a);
         setStatus((a.status as any) || (a.isActive ? "ACTIVE" : "PAUSED"));
 //media
-        const mediaList = await getIgMedia(igUserId, 100);
+        const mediaList = await getIgMedia(10);
         mediaStore.setMedia(mediaList);
         if (a.mediaId) mediaStore.select(a.mediaId);
 
@@ -126,8 +126,7 @@ export function EditAutomation() {
 
         const reply = a.rule.actions.find((x) => x.type === "comment_reply");
         preview.setReplyText(reply?.text ?? "");
-        preview.setResponses(reply?.responses ?? []);
-        preview.setRandomize(Boolean(reply?.randomize));
+
 
         const dm = a.rule.actions.find((x) => x.type === "send_dm");
         preview.setDmText(dm?.text ?? "");
@@ -173,13 +172,12 @@ export function EditAutomation() {
     return Boolean(
       igUserId &&
         mediaStore.selectedMediaId &&
-        (preview.replyText || preview.responses.length > 0)
+        preview.replyText 
     );
   }, [
     igUserId,
     mediaStore.selectedMediaId,
     preview.replyText,
-    preview.responses,
   ]);
 
   const handleNext = () => {
@@ -197,18 +195,16 @@ export function EditAutomation() {
 
       
       let replyText =
-        preview.replyText || preview.responses[0] || "Automated reply";
+        preview.replyText || "Automated reply";
       const actions: any[] = [];
-      if (preview.randomize && preview.responses.length > 0) {
+      if (preview.replyText) {
         actions.push({
           type: "comment_reply",
           text: replyText,
-          responses: preview.responses,
-          randomize: true,
         });
       } else {
         actions.push({ type: "comment_reply", text: replyText });
-      }
+      } 
       if (campaignType === "comment-reply-dm") {
         actions.push({
           type: "send_dm",
@@ -267,7 +263,7 @@ export function EditAutomation() {
       const nextStatus: "ACTIVE" | "PAUSED" = status === "ACTIVE" ? "PAUSED" : "ACTIVE";
       const nextIsActive = nextStatus === "ACTIVE";
   
-      const res = await updateAutomationStatus(automation.id, nextStatus, nextIsActive);
+      const res = await updateAutomationStatus({status:nextStatus, isActive:nextIsActive},automation.id);
   
       
       const newStatus = res?.data?.status ?? res?.status ?? nextStatus;

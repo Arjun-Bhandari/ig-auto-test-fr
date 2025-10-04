@@ -4,7 +4,7 @@ import { useAutomationPreview } from "@/stores/automation-preview";
 export function CommentSheet({commentsOpen}:{commentsOpen:boolean}){
     const user = useIgUser((s) => s.user);
     const preview = useAutomationPreview();
-    const replyText = preview.replyText || preview?.responses[0] || "Thanks for your comment";
+    const replyText = preview.replyText  || "Thanks for your comment";
     return(
         <div
         className={[

@@ -2,7 +2,7 @@
 import { useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Loader } from './loader'
-import { exchangeInstagramCode } from '../lib/instagram/api'
+import { exchangeInstagramCode } from '../lib/instagram/services'
 
 export function CallbackHandler() {
   const searchParams = useSearchParams()
@@ -21,7 +21,7 @@ export function CallbackHandler() {
       try {
         const data = await exchangeInstagramCode(code)
         console.log(data.data)
-        window.localStorage.setItem('igUserId', data.data.igUserId);
+        // window.localStorage.setItem('igUserId', data.data.igUserId);
         router.push('/')
       } catch (error) {
         console.error('Error exchanging code:', error)

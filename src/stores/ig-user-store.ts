@@ -2,7 +2,6 @@
 import { create } from 'zustand';
 
 interface IgUser {
-  id: string;
   igUserId: string;
   username: string;
   name: string;
